@@ -29,10 +29,14 @@ import com.example.galleryapp.models.Image;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class GridViewAdapter extends BaseAdapter {
@@ -41,6 +45,7 @@ public class GridViewAdapter extends BaseAdapter {
     private final Context context;
     private final ArrayList<Image> imagesList;
     private final OnClick listener;
+    private int count = 0;
 
 
     public GridViewAdapter(Context context, ArrayList<Image> imagesList, OnClick listener) {
@@ -57,17 +62,18 @@ public class GridViewAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int position) {
+        Log.d(TAG, "getItem: ");
         return null;
     }
 
     @Override
     public long getItemId(int position) {
+        Log.d(TAG, "getItemId: ");
         return 0;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Log.d(TAG, "getView: " + imagesList.get(position).imageUri);
 
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
         int pxWidth = displayMetrics.widthPixels;
@@ -81,60 +87,126 @@ public class GridViewAdapter extends BaseAdapter {
         } else {
             imageView = (ImageView) convertView;
         }
-        imageView.setAlpha(1f);
 
-//        Bitmap bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
-//
-//        try{
-//            File file = new File(context.getExternalCacheDir(), "meow.jpg");
-//            FileOutputStream fOut = new FileOutputStream(file);
-//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
-//            fOut.flush();
-//            fOut.close();
-//            file.setReadable(true, false);
-//            final Intent intent = new Intent(Intent.ACTION_SEND);
-//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-//            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-//            intent.setType("image/png");
-//            context.startActivity(Intent.createChooser(intent, "Share image via"));
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        if (imagesList.get(position).isSelected)
+            imageView.setAlpha(0.5f);
+        else
+            imageView.setAlpha(1f);
 
-        Log.d(TAG, "getView: " + imagesList.get(position).imageUri);
         Glide.with(context)
                 .load(imagesList.get(position).imageUri)
                 .into(imageView);
 
-
         imageView.setOnClickListener(v -> {
-//            if (imagesList.get(position).isSelected)
-//                imageView.setAlpha(1f);
-//            else
-//                listener.onPicClick(position);
-            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-            StrictMode.setVmPolicy(builder.build());
-
-            Bitmap bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
-
-            try{
-                File file = new File(context.getExternalCacheDir(), imagesList.get(position).id+".jpg");
-                FileOutputStream fOut = new FileOutputStream(file);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
-                fOut.flush();
-                fOut.close();
-                file.setReadable(true, false);
-                final Intent intent = new Intent(Intent.ACTION_SEND);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                Log.d(TAG, "getView: "+Uri.fromFile(file));
-                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
-                intent.setType("image/png");
-                context.startActivity(Intent.createChooser(intent, "Share image via"));
-
-            } catch (Exception e) {
-                e.printStackTrace();
+            if (count > 0) {
+                Log.d(TAG, "getView: 1" + imagesList.get(position).isSelected);
+                if (imagesList.get(position).isSelected) {
+                    Log.d(TAG, "getView: 2");
+                    count--;
+                    imageView.setAlpha(1f);
+                    listener.onPicLongPress(position, false);
+                    imagesList.get(position).isSelected = false;
+                } else {
+                    Log.d(TAG, "getView: 3");
+                    count++;
+                    imagesList.get(position).isSelected = true;
+                    imageView.setAlpha(0.5f);
+                    listener.onPicLongPress(position, true);
+                }
+            } else {
+                if (imagesList.get(position).isSelected) {
+                    imageView.setAlpha(1f);
+                    imagesList.get(position).isSelected = true;
+                } else
+                    listener.onPicClick(position);
             }
+//            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+//            StrictMode.setVmPolicy(builder.build());
+
+//            try {
+//                URL url = new URL(imagesList.get(position).imageUri);
+//                InputStream in = new BufferedInputStream(url.openStream());
+//                ByteArrayOutputStream out = new ByteArrayOutputStream();
+//                byte[] buf = new byte[1024];
+//                int n = 0;
+//                while (-1 != (n = in.read(buf))) {
+//                    out.write(buf, 0, n);
+//                }
+//                out.close();
+//                in.close();
+//                byte[] response = out.toByteArray();
+//                FileOutputStream fos = new FileOutputStream("C://borrowed_image.jpg");
+//                fos.write(response);
+//                fos.close();
+//
+//                final File file = new File(context.getFilesDir(), "webImage");
+//                Uri weburi = Uri.fromFile(file);
+//
+//                final Intent intent = new Intent(Intent.ACTION_SEND);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                Log.d(TAG, "intent scnz uri: "+Uri.fromFile(file));
+//                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+//                intent.setType("image/*");
+//                context.startActivity(Intent.createChooser(intent, "Share image via"));
+//            }catch (Exception e){
+//
+//            }
+
+//            Bitmap bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
+
+//            Log.d(TAG, "intent scnz: start");
+//            try {
+////                String root = Environment.getExternalStorageDirectory().toString();
+//                String root = context.getFilesDir().getAbsolutePath();
+//                File myDir = new File(root );
+//
+//                if (!myDir.exists()) {
+//                    myDir.mkdirs();
+//                }
+//
+//                String name =  "TestPhoto.jpeg";
+//                myDir = new File(myDir, name);
+//                FileOutputStream out = new FileOutputStream(myDir);
+//                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+//
+//                out.flush();
+//                out.close();
+//
+//                final Intent intent = new Intent(Intent.ACTION_SEND);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                Log.d(TAG, "intent scnz uri: "+Uri.fromFile(myDir));
+//                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(myDir));
+//
+//                String filenameArray[] =  Uri.fromFile(myDir).toString().split("\\.");
+//                String extension = filenameArray[filenameArray.length-1];
+//                System.out.println(extension);
+//                Log.d(TAG, "intent scnz ext: "+extension);
+//
+//                intent.setType("image/*");
+//                context.startActivity(Intent.createChooser(intent, "Share image via"));
+//            } catch(Exception e){
+//                Log.e(TAG, "getView: intent scnz exception ", e);
+//                // some action
+//            }
+
+
+//            try{
+//                File file = new File(context.getExternalCacheDir(), imagesList.get(position).id+".jpg");
+//                FileOutputStream fOut = new FileOutputStream(file);
+//                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+//                fOut.flush();
+//                fOut.close();
+////                file.setReadable(true, false);
+//                final Intent intent = new Intent(Intent.ACTION_SEND);
+//                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//                Log.d(TAG, "getView: "+Uri.fromFile(file));
+//                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+//                intent.setType("image/png");
+//                context.startActivity(Intent.createChooser(intent, "Share image via"));
+//
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
 
         });
 
@@ -142,8 +214,10 @@ public class GridViewAdapter extends BaseAdapter {
             Log.d(TAG, "getView: " + imagesList.get(position).isSelected);
             if (imagesList.get(position).isSelected) {
                 imageView.setAlpha(1f);
+                count--;
                 listener.onPicLongPress(position, false);
-            }else {
+            } else {
+                count++;
                 imageView.setAlpha(0.5f);
                 listener.onPicLongPress(position, true);
             }

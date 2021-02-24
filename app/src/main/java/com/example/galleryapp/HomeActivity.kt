@@ -7,13 +7,13 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.example.galleryapp.databinding.ActivityHomeBinding
 import com.example.galleryapp.models.Image
@@ -26,8 +26,6 @@ import java.net.URL
 
 
 private const val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1
-private const val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 2
-
 
 class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 
@@ -45,17 +43,8 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         val view = binding.root
         setContentView(view)
 
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-        val width = displayMetrics.widthPixels
 
-        binding.gridView.columnWidth = width / 5
-        //init()
 
-        for (i in imagesList) {
-            Log.d(TAG, "onCreate: " + i.imageUri)
-        }
-        Log.d(TAG, "onCreate: " + imagesList.size)
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -69,25 +58,78 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
             MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
         )
 
+        actionViews()
+
+
+    }
+
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        super.dispatchTouchEvent(event)
+        val x = event.x.toInt()
+        val y = event.y.toInt()
+        binding.pullToRefresh.isEnabled = y <= 1200
+        Log.e("yy", "" + y)
+        when (event.action) {
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
+            }
+        }
+        return false
+    }
+
+
+    private fun actionViews() {
+        val displayMetrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(displayMetrics)
+        val width = displayMetrics.widthPixels
+
+        getImagesApi()
+        getImagesApi()
+
+        binding.pullToRefresh.setOnRefreshListener {
+            actionViews()
+            binding.pullToRefresh.isRefreshing = false
+        }
+        binding.gridView.columnWidth = width / 5
 
         binding.delete.setOnClickListener {
+            val temp = ArrayList<Image>()
             for (i in 0 until positions.size) {
-                imagesList[positions[i]].isSelected = false
-                imagesList.removeAt(positions[i])
+                temp.add(imagesList[positions[i]])
             }
+            imagesList.removeAll(temp)
             positions.clear()
             gridViewAdapter.notifyDataSetChanged()
             binding.constraint.visibility = View.GONE
+            if (imagesList.size == 0) {
+                binding.image.visibility = View.VISIBLE
+                binding.text.visibility = View.VISIBLE
+            }
+
         }
 
-        binding.share.setOnClickListener{
+        binding.share.setOnClickListener {
+            positions.clear()
+            var ifAllSelected = false
+            for (i in 0 until imagesList.size) {
+                if (!imagesList[i].isSelected) {
+                    ifAllSelected = true
+                }
+                positions.add(i)
+                imagesList[i].isSelected = true
+            }
 
-            Log.d(TAG, "onCreate: " + imagesList[positions[0]].imageUri)
+            if (!ifAllSelected)
+                for (i in 0 until imagesList.size) {
+                    imagesList[i].isSelected = false
+                    positions.clear()
+                    Log.d(TAG, "actionViewsa: x")
+                }
+
+            gridViewAdapter.notifyDataSetChanged()
 
         }
 
-        getImagesApi()
-        getImagesApi()
 
     }
 
@@ -97,7 +139,7 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
             TAG,
             "getImagesApi: URL " + WebServices.BASE_URL + resources.getString(R.string.PIXABAY_KEY)
         )
-        val JsonObjectRequest = object : JsonObjectRequest(
+        val jsonObjectRequest = object : JsonObjectRequest(
             Method.GET,
             WebServices.BASE_URL + resources.getString(R.string.PIXABAY_KEY),
             null,
@@ -108,20 +150,15 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
                     val hitsArray = response.getJSONArray("hits")
                     for (i in 0 until hitsArray.length()) {
 
-
                         val ob = hitsArray.getJSONObject(i)
                         val urls = ob.getString("webformatURL")
                         val id = ob.getInt("id")
 
-
-                        imagesList.add(Image(urls, id.toString()))
+                        imagesList.add(0, Image(urls, id.toString()))
                     }
-//                    Log.d(TAG, "getImagesApi: $response")
 
-
-                    for (i in 0 until imagesList.size) {
-                        Log.d(TAG, "getImagesApi list is: " + imagesList[i].imageUri)
-                    }
+                    binding.image.visibility = View.GONE
+                    binding.text.visibility = View.GONE
 
                     gridViewAdapter = GridViewAdapter(this, imagesList, this)
                     binding.gridView.adapter = gridViewAdapter
@@ -133,7 +170,9 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
             Response.ErrorListener { error ->
 
                 try {
-//                    val data = String(error.networkResponse.data)
+//                    binding.emptyState.cl.visibility = View.VISIBLE
+                    binding.image.visibility = View.VISIBLE
+                    binding.text.visibility = View.VISIBLE
                     Log.e(TAG, "getImagesApi: error ", error)
                 } catch (ex: Exception) {
                     Log.e(TAG, "getStoresCategories: ", ex)
@@ -145,15 +184,15 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         }
 
 
-        JsonObjectRequest.retryPolicy = DefaultRetryPolicy(
+        jsonObjectRequest.retryPolicy = DefaultRetryPolicy(
             VOLLEY_TIMEOUT,
             DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
             DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         )
-        VolleySingleton.getInstance(applicationContext).addToRequestQueue(JsonObjectRequest)
+        VolleySingleton.getInstance(applicationContext).addToRequestQueue(jsonObjectRequest)
     }
 
-    private fun init() : Bitmap?{
+    private fun init(): Bitmap? {
 
         var urlConnection: HttpURLConnection? = null
         try {
@@ -164,7 +203,7 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 //                HttpStatus.SC_OK) {
 //
 //            }
-            val inputStream = urlConnection!!.inputStream
+            val inputStream = urlConnection.inputStream
             if (inputStream != null) {
                 return BitmapFactory.decodeStream(inputStream)
             }
@@ -174,7 +213,7 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         } finally {
             urlConnection?.disconnect()
         }
-        return null;
+        return null
 
 
     }
@@ -184,20 +223,17 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
     }
 
     override fun onPicLongPress(position: Int, isSelected: Boolean) {
-//        imagesList.removeAt(position)
-//        gridViewAdapter.notifyDataSetChanged()
         if (positions.contains(position)) {
             positions.remove(position)
         } else {
             positions.add(position)
         }
 
-        if (isSelected) {
+        if (positions.size > 0) {
             binding.constraint.visibility = View.VISIBLE
-
         } else
             binding.constraint.visibility = View.GONE
-        Log.d(TAG, "onPicLongPress: $position")
+        Log.d(TAG, "onPicLongPress: $positions.size")
     }
 
 
