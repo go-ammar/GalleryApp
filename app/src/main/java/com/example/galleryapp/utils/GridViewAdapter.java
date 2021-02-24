@@ -74,7 +74,7 @@ public class GridViewAdapter extends BaseAdapter {
         if (convertView == null) {
             imageView = new ImageView(context);
             imageView.setLayoutParams(new GridView.LayoutParams(pxWidth / 4, pxWidth / 4));
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             imageView.setPadding(1, 1, 1, 1);
         } else {
             imageView = (ImageView) convertView;
@@ -91,7 +91,7 @@ public class GridViewAdapter extends BaseAdapter {
             if (imagesList.get(position).isSelected)
                 imageView.setAlpha(1f);
             else
-                listener.onPicClick(position);
+                listener.onPicClick(position, imagesList.get(position).imageUri);
 
 //            Picasso.with(context).load(imagesList.get(position).imageUri).into(new Target() {
 //                @Override
@@ -145,7 +145,7 @@ public class GridViewAdapter extends BaseAdapter {
     }
 
     public interface OnClick {
-        void onPicClick(int position);
+        void onPicClick(int position, String imgUri);
 
         void onPicLongPress(int position, Boolean isSelected);
     }

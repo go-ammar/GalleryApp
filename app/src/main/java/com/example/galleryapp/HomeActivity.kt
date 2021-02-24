@@ -22,6 +22,7 @@ import com.example.galleryapp.databinding.ActivityHomeBinding
 import com.example.galleryapp.models.Image
 import com.example.galleryapp.utils.Global.VOLLEY_TIMEOUT
 import com.example.galleryapp.utils.GridViewAdapter
+import com.example.galleryapp.utils.ImageActivity
 import com.example.galleryapp.utils.VolleySingleton
 import com.example.galleryapp.utils.WebServices
 import com.squareup.picasso.Picasso
@@ -294,8 +295,14 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 //        imagesList.add(Image(R.drawable.ic_delete))
     }
 
-    override fun onPicClick(position: Int) {
+    override fun onPicClick(position: Int, imgUri : String) {
         Log.d(TAG, "onPicClick: $position")
+        Log.d(TAG, "onPicClick: path $imgUri")
+
+        val intent = Intent(this, ImageActivity::class.java).apply {
+            putExtra("uri", imgUri)
+        }
+        startActivity(intent)
     }
 
     override fun onPicLongPress(position: Int, isSelected: Boolean) {
