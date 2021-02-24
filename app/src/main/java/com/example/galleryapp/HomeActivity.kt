@@ -1,34 +1,28 @@
 package com.example.galleryapp
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.Drawable
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
-import android.widget.ImageView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonArrayRequest
+import com.android.volley.toolbox.JsonObjectRequest
 import com.example.galleryapp.databinding.ActivityHomeBinding
 import com.example.galleryapp.models.Image
 import com.example.galleryapp.utils.Global.VOLLEY_TIMEOUT
 import com.example.galleryapp.utils.GridViewAdapter
 import com.example.galleryapp.utils.VolleySingleton
 import com.example.galleryapp.utils.WebServices
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Picasso.LoadedFrom
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 
 
 private const val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1
@@ -56,24 +50,24 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         val width = displayMetrics.widthPixels
 
         binding.gridView.columnWidth = width / 5
-        init()
+        //init()
 
         for (i in imagesList) {
             Log.d(TAG, "onCreate: " + i.imageUri)
         }
         Log.d(TAG, "onCreate: " + imagesList.size)
-//        if (ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.READ_EXTERNAL_STORAGE
-//            )
-//            != PackageManager.PERMISSION_GRANTED
-//        ) ActivityCompat.requestPermissions(
-//            this, arrayOf(
-//                Manifest.permission.READ_EXTERNAL_STORAGE,
-//                Manifest.permission.WRITE_EXTERNAL_STORAGE
-//            ),
-//            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
-//        )
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            )
+            != PackageManager.PERMISSION_GRANTED
+        ) ActivityCompat.requestPermissions(
+            this, arrayOf(
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ),
+            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
+        )
 
 
         binding.delete.setOnClickListener {
@@ -101,23 +95,29 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 
         Log.d(
             TAG,
-            "getImagesApi: URL " + WebServices.BASE_URL + resources.getString(R.string.ACCESS_KEY)
+            "getImagesApi: URL " + WebServices.BASE_URL + resources.getString(R.string.PIXABAY_KEY)
         )
-        val JsonArrayRequest = object : JsonArrayRequest(
+        val JsonObjectRequest = object : JsonObjectRequest(
             Method.GET,
-            WebServices.BASE_URL + resources.getString(R.string.ACCESS_KEY),
+            WebServices.BASE_URL + resources.getString(R.string.PIXABAY_KEY),
             null,
             Response.Listener { response ->
 
                 try {
 
-                    for (i in 0 until response.length()) {
-                        val obj = response.getJSONObject(i)
-                        val urls = obj.getJSONObject("urls")
-                        urls.getString("raw")
-                        imagesList.add(Image(urls.getString("full")))
+                    val hitsArray = response.getJSONArray("hits")
+                    for (i in 0 until hitsArray.length()) {
+
+
+                        val ob = hitsArray.getJSONObject(i)
+                        val urls = ob.getString("webformatURL")
+                        val id = ob.getInt("id")
+
+
+                        imagesList.add(Image(urls, id.toString()))
                     }
 //                    Log.d(TAG, "getImagesApi: $response")
+
 
                     for (i in 0 until imagesList.size) {
                         Log.d(TAG, "getImagesApi list is: " + imagesList[i].imageUri)
@@ -145,153 +145,38 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         }
 
 
-        JsonArrayRequest.retryPolicy = DefaultRetryPolicy(
+        JsonObjectRequest.retryPolicy = DefaultRetryPolicy(
             VOLLEY_TIMEOUT,
             DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
             DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         )
-        VolleySingleton.getInstance(applicationContext).addToRequestQueue(JsonArrayRequest)
+        VolleySingleton.getInstance(applicationContext).addToRequestQueue(JsonObjectRequest)
     }
 
-    private fun init() {
+    private fun init() : Bitmap?{
+
+        var urlConnection: HttpURLConnection? = null
+        try {
+            val uri = URL(imagesList[0].imageUri)
+            urlConnection = uri.openConnection() as HttpURLConnection
+            val statusCode = urlConnection.responseCode
+//            if (statusCode !=
+//                HttpStatus.SC_OK) {
+//
+//            }
+            val inputStream = urlConnection!!.inputStream
+            if (inputStream != null) {
+                return BitmapFactory.decodeStream(inputStream)
+            }
+        } catch (e: java.lang.Exception) {
+            urlConnection!!.disconnect()
+            Log.w("ImageDownloader", "Error downloading image from")
+        } finally {
+            urlConnection?.disconnect()
+        }
+        return null;
 
 
-//        val uri: Uri
-//        val cursor: Cursor
-//        val column_index_data: Int
-//        val column_index_folder_name: Int
-//        val listOfAllImages = ArrayList<String?>()
-//        var absolutePathOfImage: String? = null
-//        uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-//
-//        val projection = arrayOf(
-//            MediaColumns.DATA,
-//            MediaStore.Images.Media.BUCKET_DISPLAY_NAME
-//        )
-//
-//        cursor = this.contentResolver.query(
-//            uri, projection, null,
-//            null, null
-//        )!!
-//
-//        column_index_data = cursor.getColumnIndexOrThrow(MediaColumns.DATA)
-//        column_index_folder_name = cursor
-//            .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
-//        while (cursor.moveToNext()) {
-//            Log.d(TAG, "init: inside loop ")
-//            absolutePathOfImage = cursor.getString(column_index_data)
-//            imagesList.add(Image(absolutePathOfImage))
-//        }
-//
-//        binding.gridView.adapter = GridViewAdapter(this, imagesList)
-//        val projection = arrayOf(MediaColumns.DATA)
-//
-//        val cursor = contentResolver.query(
-//            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-//            projection,
-//            null,
-//            null,
-//            null
-//        )
-//        while (cursor!!.moveToNext()) {
-//            val absolutePathOfImage = cursor.getString(cursor.getColumnIndex(MediaColumns.DATA))
-//            val ImageModel = ImageModel()
-//            ImageModel.setImage(absolutePathOfImage)
-//            imageList.add(ImageModel)
-//            imagesList.add(Image(absolutePathOfImage))
-//        }
-//        cursor.close()
-//        Log.d(TAG, "init: outside loop ")
-//        binding.gridView.adapter = GridViewAdapter(this, imagesList)
-
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
-//        imagesList.add(Image(R.drawable.ic_delete))
     }
 
     override fun onPicClick(position: Int) {

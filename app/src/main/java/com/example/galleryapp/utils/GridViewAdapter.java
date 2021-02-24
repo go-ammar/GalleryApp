@@ -5,10 +5,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -81,6 +83,25 @@ public class GridViewAdapter extends BaseAdapter {
         }
         imageView.setAlpha(1f);
 
+//        Bitmap bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
+//
+//        try{
+//            File file = new File(context.getExternalCacheDir(), "meow.jpg");
+//            FileOutputStream fOut = new FileOutputStream(file);
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+//            fOut.flush();
+//            fOut.close();
+//            file.setReadable(true, false);
+//            final Intent intent = new Intent(Intent.ACTION_SEND);
+//            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+//            intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+//            intent.setType("image/png");
+//            context.startActivity(Intent.createChooser(intent, "Share image via"));
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
         Log.d(TAG, "getView: " + imagesList.get(position).imageUri);
         Glide.with(context)
                 .load(imagesList.get(position).imageUri)
@@ -88,44 +109,33 @@ public class GridViewAdapter extends BaseAdapter {
 
 
         imageView.setOnClickListener(v -> {
-            if (imagesList.get(position).isSelected)
-                imageView.setAlpha(1f);
-            else
-                listener.onPicClick(position);
+//            if (imagesList.get(position).isSelected)
+//                imageView.setAlpha(1f);
+//            else
+//                listener.onPicClick(position);
+            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+            StrictMode.setVmPolicy(builder.build());
 
-//            Picasso.with(context).load(imagesList.get(position).imageUri).into(new Target() {
-//                @Override
-//                public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
-//                    String fileUri ="";
-//                    try {
-//                        File mydir = new File(Environment.getExternalStorageDirectory() + "/11zon");
-//                        if (!mydir.exists()) {
-//                            mydir.mkdirs();
-//                        }
-//
-//                        fileUri = mydir.getAbsolutePath() + File.separator + System.currentTimeMillis() + ".jpg";
-//                        FileOutputStream outputStream = new FileOutputStream(fileUri);
-//
-//                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
-//                        outputStream.flush();
-//                        outputStream.close();
-//                    } catch(IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    Uri uri= Uri.parse(MediaStore.Images.Media.insertImage(context.getContentResolver(), BitmapFactory.decodeFile(fileUri),null,null));
-//                    // use intent to share image
-//                    Intent share = new Intent(Intent.ACTION_SEND);
-//                    share.setType("image/*");
-//                    share.putExtra(Intent.EXTRA_STREAM, uri);
-//                    context.startActivity(Intent.createChooser(share, "Share Image"));
-//                }
-//                @Override
-//                public void onBitmapFailed(Drawable errorDrawable) {
-//                }
-//                @Override
-//                public void onPrepareLoad(Drawable placeHolderDrawable) {
-//                }
-//            });
+            Bitmap bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
+
+            try{
+                File file = new File(context.getExternalCacheDir(), imagesList.get(position).id+".jpg");
+                FileOutputStream fOut = new FileOutputStream(file);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+                fOut.flush();
+                fOut.close();
+                file.setReadable(true, false);
+                final Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                Log.d(TAG, "getView: "+Uri.fromFile(file));
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                intent.setType("image/png");
+                context.startActivity(Intent.createChooser(intent, "Share image via"));
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
         });
 
         imageView.setOnLongClickListener(v -> {
