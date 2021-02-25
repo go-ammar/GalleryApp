@@ -106,8 +106,6 @@ public class FullImageScrollAdapter extends RecyclerView.Adapter<RecyclerView.Vi
 
 
 
-
-
     static class ImageDataViewHolder extends RecyclerView.ViewHolder {
 
         ItemImageBinding binding;

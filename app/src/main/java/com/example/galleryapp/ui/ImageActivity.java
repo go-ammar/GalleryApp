@@ -57,6 +57,9 @@ public class ImageActivity extends AppCompatActivity implements FullImageScrollA
         snapHelper.attachToRecyclerView(binding.horizontalRecyclerView);
         binding.horizontalRecyclerView.scrollToPosition(position);
 
+        binding.back.setOnClickListener(v -> {
+            finish();
+        });
 
     }
 

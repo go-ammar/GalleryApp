@@ -45,19 +45,7 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         setContentView(view)
 
 
-
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            )
-            != PackageManager.PERMISSION_GRANTED
-        ) ActivityCompat.requestPermissions(
-            this, arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ),
-            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
-        )
+        supportActionBar?.title = "Galleria"
 
         actionViews()
 
