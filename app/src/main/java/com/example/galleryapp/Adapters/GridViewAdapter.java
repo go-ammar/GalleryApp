@@ -101,7 +101,7 @@ public class GridViewAdapter extends BaseAdapter {
             if (imagesList.get(position).isSelected)
                 imageView.setAlpha(1f);
             else
-                listener.onPicClick(position, imagesList.get(position).imageUri);
+                listener.onPicClick(position, imagesList.get(position).imageUri, imagesList);
 
 //            Picasso.with(context).load(imagesList.get(position).imageUri).into(new Target() {
 //                @Override
@@ -248,5 +248,7 @@ public class GridViewAdapter extends BaseAdapter {
         void onPicLongPress(int position, Boolean isSelected);
 
         void onPicClick(int position);
+
+        void onPicClick(int position, String imageUri, ArrayList<Image> imagesList);
     }
 }

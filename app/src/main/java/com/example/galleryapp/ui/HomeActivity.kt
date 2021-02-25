@@ -16,13 +16,13 @@ import androidx.core.content.ContextCompat
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
-import com.example.galleryapp.databinding.ActivityHomeBinding
-import com.example.galleryapp.models.Image
-import com.example.galleryapp.utils.Global.VOLLEY_TIMEOUT
 import com.example.galleryapp.Adapters.GridViewAdapter
 import com.example.galleryapp.R
 import com.example.galleryapp.Web.VolleySingleton
 import com.example.galleryapp.Web.WebServices
+import com.example.galleryapp.databinding.ActivityHomeBinding
+import com.example.galleryapp.models.Image
+import com.example.galleryapp.utils.Global.VOLLEY_TIMEOUT
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -225,18 +225,31 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 
     }
 
-    override fun onPicClick(position: Int, imgUri : String) {
+    override fun onPicClick(position: Int, imgUri: String) {
         Log.d(TAG, "onPicClick: $position")
         Log.d(TAG, "onPicClick: path $imgUri")
 
-        val intent = Intent(this, ImageActivity::class.java).apply {
-            putExtra("uri", imgUri)
-        }
-        startActivity(intent)
+
     }
 
     override fun onPicClick(position: Int) {
         Log.d(TAG, "onPicClick: $position")
+    }
+
+    override fun onPicClick(
+        position: Int,
+        imageUri: String?,
+        imagesList: java.util.ArrayList<Image>?
+    )
+    {
+        val intent = Intent(this, ImageActivity::class.java).apply {
+            putExtra("uriList", imagesList)
+            putExtra("uri", position)
+        }
+        startActivity(intent)
+
+
+
     }
 
     override fun onPicLongPress(position: Int, isSelected: Boolean) {
