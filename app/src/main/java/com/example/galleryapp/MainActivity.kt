@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity() {
             val mainIntent = Intent(this, HomeActivity::class.java)
             startActivity(mainIntent)
             finish()
+            overridePendingTransition(0, R.anim.fade_out)
         }, 1000)
 
     }

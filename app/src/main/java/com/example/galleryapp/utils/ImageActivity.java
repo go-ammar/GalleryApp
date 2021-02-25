@@ -21,10 +21,8 @@ public class ImageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image);
 
-
         context = this;
         actionViews();
-
 
 
     }

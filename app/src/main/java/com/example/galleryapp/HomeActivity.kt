@@ -1,6 +1,7 @@
 package com.example.galleryapp
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -223,10 +224,16 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         Log.d(TAG, "onPicClick: $position")
         Log.d(TAG, "onPicClick: path $imgUri")
 
-        val intent = Intent(this, ImageActivity::class.java).apply {
-            putExtra("uri", imgUri)
-        }
+
+
+
+        val intent = Intent(this, ImageActivity::class.java)
+//            .apply {
+//            putExtra("uri", imgUri)
+//        }
+        intent.putExtra("uri", imgUri)
         startActivity(intent)
+        overridePendingTransition(R.anim.fade_in,0)
     }
 
     override fun onPicLongPress(position: Int, isSelected: Boolean) {

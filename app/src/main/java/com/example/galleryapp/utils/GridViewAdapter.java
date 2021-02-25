@@ -73,6 +73,12 @@ public class GridViewAdapter extends BaseAdapter {
     }
 
     @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        count = 0;
+    }
+
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
         DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
@@ -98,10 +104,10 @@ public class GridViewAdapter extends BaseAdapter {
                 .into(imageView);
 
         imageView.setOnClickListener(v -> {
-            if (imagesList.get(position).isSelected)
-                imageView.setAlpha(1f);
-            else
-                listener.onPicClick(position, imagesList.get(position).imageUri);
+//            if (imagesList.get(position).isSelected)
+//                imageView.setAlpha(1f);
+//            else
+//                listener.onPicClick(position, imagesList.get(position).imageUri);
 
 //            Picasso.with(context).load(imagesList.get(position).imageUri).into(new Target() {
 //                @Override
@@ -132,7 +138,7 @@ public class GridViewAdapter extends BaseAdapter {
                     imageView.setAlpha(1f);
                     imagesList.get(position).isSelected = true;
                 } else
-                    listener.onPicClick(position);
+                    listener.onPicClick(position, imagesList.get(position).imageUri);
             }
 //            StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
 //            StrictMode.setVmPolicy(builder.build());
@@ -247,6 +253,6 @@ public class GridViewAdapter extends BaseAdapter {
 
         void onPicLongPress(int position, Boolean isSelected);
 
-        void onPicClick(int position);
+//        void onPicClick(int position);
     }
 }
