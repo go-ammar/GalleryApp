@@ -1,4 +1,4 @@
-package com.example.galleryapp.utils;
+package com.example.galleryapp.ui;
 
 import androidx.appcompat.app.AppCompatActivity;
 

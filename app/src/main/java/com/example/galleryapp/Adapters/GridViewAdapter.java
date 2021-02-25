@@ -1,4 +1,4 @@
-package com.example.galleryapp.utils;
+package com.example.galleryapp.Adapters;
 
 import android.app.Activity;
 import android.content.Context;

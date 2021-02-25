@@ -1,6 +1,7 @@
-package com.example.galleryapp
+package com.example.galleryapp.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -18,10 +19,10 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.example.galleryapp.databinding.ActivityHomeBinding
 import com.example.galleryapp.models.Image
 import com.example.galleryapp.utils.Global.VOLLEY_TIMEOUT
-import com.example.galleryapp.utils.GridViewAdapter
-import com.example.galleryapp.utils.ImageActivity
-import com.example.galleryapp.utils.VolleySingleton
-import com.example.galleryapp.utils.WebServices
+import com.example.galleryapp.Adapters.GridViewAdapter
+import com.example.galleryapp.R
+import com.example.galleryapp.Web.VolleySingleton
+import com.example.galleryapp.Web.WebServices
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -161,7 +162,12 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
                     binding.image.visibility = View.GONE
                     binding.text.visibility = View.GONE
 
-                    gridViewAdapter = GridViewAdapter(this, imagesList, this)
+                    gridViewAdapter =
+                        GridViewAdapter(
+                            this,
+                            imagesList,
+                            this
+                        )
                     binding.gridView.adapter = gridViewAdapter
 
                 } catch (ex: Exception) {
@@ -227,6 +233,10 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
             putExtra("uri", imgUri)
         }
         startActivity(intent)
+    }
+
+    override fun onPicClick(position: Int) {
+        Log.d(TAG, "onPicClick: $position")
     }
 
     override fun onPicLongPress(position: Int, isSelected: Boolean) {

@@ -1,4 +1,4 @@
-package com.example.galleryapp.utils;
+package com.example.galleryapp.Web;
 
 public class WebServices {
 
