@@ -1,4 +1,4 @@
-package com.example.galleryapp.utils;
+package com.example.galleryapp.Web;
 
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -1,4 +1,4 @@
-package com.example.galleryapp
+package com.example.galleryapp.ui
 
 import android.Manifest
 import android.content.Intent
@@ -16,13 +16,13 @@ import androidx.core.content.ContextCompat
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.example.galleryapp.Adapters.GridViewAdapter
+import com.example.galleryapp.R
+import com.example.galleryapp.Web.VolleySingleton
+import com.example.galleryapp.Web.WebServices
 import com.example.galleryapp.databinding.ActivityHomeBinding
 import com.example.galleryapp.models.Image
 import com.example.galleryapp.utils.Global.VOLLEY_TIMEOUT
-import com.example.galleryapp.utils.GridViewAdapter
-import com.example.galleryapp.utils.ImageActivity
-import com.example.galleryapp.utils.VolleySingleton
-import com.example.galleryapp.utils.WebServices
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -34,7 +34,6 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 
     private lateinit var binding: ActivityHomeBinding
     private var imagesList = ArrayList<Image>()
-    private val TAG = "HomeActivity"
     private lateinit var gridViewAdapter: GridViewAdapter
     private var positions = ArrayList<Int>()
 
@@ -68,10 +67,8 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         super.dispatchTouchEvent(event)
-        val x = event.x.toInt()
         val y = event.y.toInt()
         binding.pullToRefresh.isEnabled = y <= 1200
-        Log.e("yy", "" + y)
         when (event.action) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE, MotionEvent.ACTION_UP -> {
             }
@@ -125,7 +122,6 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
                 for (i in 0 until imagesList.size) {
                     imagesList[i].isSelected = false
                     positions.clear()
-                    Log.d(TAG, "actionViewsa: x")
                 }
 
             gridViewAdapter.notifyDataSetChanged()
@@ -137,10 +133,7 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 
     private fun getImagesApi() {
 
-        Log.d(
-            TAG,
-            "getImagesApi: URL " + WebServices.BASE_URL + resources.getString(R.string.PIXABAY_KEY)
-        )
+
         val jsonObjectRequest = object : JsonObjectRequest(
             Method.GET,
             WebServices.BASE_URL + resources.getString(R.string.PIXABAY_KEY),
@@ -162,11 +155,15 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
                     binding.image.visibility = View.GONE
                     binding.text.visibility = View.GONE
 
-                    gridViewAdapter = GridViewAdapter(this, imagesList, this)
+                    gridViewAdapter =
+                        GridViewAdapter(
+                            this,
+                            imagesList,
+                            this
+                        )
                     binding.gridView.adapter = gridViewAdapter
 
                 } catch (ex: Exception) {
-                    Log.e(TAG, "getImagesApi: ", ex)
                 }
             },
             Response.ErrorListener { error ->
@@ -175,9 +172,7 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
 //                    binding.emptyState.cl.visibility = View.VISIBLE
                     binding.image.visibility = View.VISIBLE
                     binding.text.visibility = View.VISIBLE
-                    Log.e(TAG, "getImagesApi: error ", error)
                 } catch (ex: Exception) {
-                    Log.e(TAG, "getStoresCategories: ", ex)
                 }
 
             }
@@ -194,46 +189,22 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
         VolleySingleton.getInstance(applicationContext).addToRequestQueue(jsonObjectRequest)
     }
 
-    private fun init(): Bitmap? {
 
-        var urlConnection: HttpURLConnection? = null
-        try {
-            val uri = URL(imagesList[0].imageUri)
-            urlConnection = uri.openConnection() as HttpURLConnection
-            val statusCode = urlConnection.responseCode
-//            if (statusCode !=
-//                HttpStatus.SC_OK) {
-//
-//            }
-            val inputStream = urlConnection.inputStream
-            if (inputStream != null) {
-                return BitmapFactory.decodeStream(inputStream)
-            }
-        } catch (e: java.lang.Exception) {
-            urlConnection!!.disconnect()
-            Log.w("ImageDownloader", "Error downloading image from")
-        } finally {
-            urlConnection?.disconnect()
+
+    override fun onPicClick(
+        position: Int,
+        imageUri: String?,
+        imagesList: java.util.ArrayList<Image>?
+    )
+    {
+        val intent = Intent(this, ImageActivity::class.java).apply {
+            putExtra("uriList", imagesList)
+            putExtra("uri", position)
         }
-        return null
-
-
-    }
-
-    override fun onPicClick(position: Int, imgUri : String) {
-        Log.d(TAG, "onPicClick: $position")
-        Log.d(TAG, "onPicClick: path $imgUri")
-
-
-
-
-        val intent = Intent(this, ImageActivity::class.java)
-//            .apply {
-//            putExtra("uri", imgUri)
-//        }
-        intent.putExtra("uri", imgUri)
         startActivity(intent)
         overridePendingTransition(R.anim.fade_in,0)
+
+
     }
 
     override fun onPicLongPress(position: Int, isSelected: Boolean) {
@@ -247,7 +218,6 @@ class HomeActivity : AppCompatActivity(), GridViewAdapter.OnClick {
             binding.constraint.visibility = View.VISIBLE
         } else
             binding.constraint.visibility = View.GONE
-        Log.d(TAG, "onPicLongPress: $positions.size")
     }
 
 
